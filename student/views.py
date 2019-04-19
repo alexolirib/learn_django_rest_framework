@@ -14,42 +14,43 @@ from rest_framework.views import APIView
 
 from student.models import Student
 from django.contrib.auth.models import User
-from student.serializers import UserSerializer
+from student.serializers import StudentSerializer, StudentInfoImpSerializer
+from rest_framework.permissions import IsAuthenticated
+from learn_django_rest_framework.permissions import IsOwnerOrReadOnly
 #antes da autenticação
 # from student.serializers import StudentSerializer
 #https://www.django-rest-framework.org/api-guide/renderers/
 
 
+# class StudentList(mixins.ListModelMixin,
+#                   mixins.CreateModelMixin,
+#                   generics.GenericAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = StudentSerializer
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    #permission_classes = (permissions.IsAuthenticated,)
+
+    # def perform_create(self, serializer):
+    #     serializer.save(owner=self.request.user)
+    #
+    # def get(self, request, *args, **kwargs):
+    #     return self.list(request, *args, **kwargs)
+    #
+    # def post(self, request, *args, **kwargs):
+    #     return self.create(request, *args, **kwargs)
+
+
 class StudentList(mixins.ListModelMixin,
                   mixins.CreateModelMixin,
                   generics.GenericAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-
-
-#antes de autenticação
-# class StudentList(mixins.ListModelMixin,
-#                   mixins.CreateModelMixin,
-#                   generics.GenericAPIView):
-#     queryset = Student.objects.all()
-#     serializer_class = StudentSerializer
-#
-#     def get(self, request, *args, **kwargs):
-#         return self.list(request, *args, **kwargs)
-#
-#     def post(self, request, *args, **kwargs):
-#         return self.create(request, *args, **kwargs)
 
 
 # class StudentList(APIView):
@@ -67,68 +68,42 @@ class StudentList(mixins.ListModelMixin,
 #             return Response(serializer.data, status=status.HTTP_201_CREATED)
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'POST'])
-def student_list(request, format=None):
-
-    if request.method == 'GET':
-        students = Student.objects.all()
-        serializer = StudentSerializer(students, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = StudentSerializer(data = data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#outra forma
-# @csrf_exempt
-# def student_list(request):
+# @api_view(['GET', 'POST'])
+# def student_list(request, format=None):
 #
 #     if request.method == 'GET':
 #         students = Student.objects.all()
 #         serializer = StudentSerializer(students, many=True)
-#         return JsonResponse(serializer.data, safe=False, status=200)
+#         return Response(serializer.data)
 #
 #     elif request.method == 'POST':
 #         data = JSONParser().parse(request)
 #         serializer = StudentSerializer(data = data)
 #         if serializer.is_valid():
 #             serializer.save()
-#             return JsonResponse(serializer.data, status=201)
-#         return JsonResponse(serializer.errors, status=400)
-
-@csrf_exempt
-def student_detail(request, pk):
-    try:
-        student = Student.objects.get(pk = pk)
-    except Student.DoesNotExist:
-        return HttpResponse(status=404)
-    if request.method == 'GET':
-        serializer = StudentSerializer(student)
-        return JsonResponse(serializer.data)
-
-    elif request.method == 'PUT':
-        data = JSONParser().parse(request)
-        serializer = StudentSerializer(student, data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors, status=400)
-
-    elif request.method == 'DELETE':
-        student.delete()
-        return HttpResponse(status=204)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def student_customized(request):
-    try:
+class StudentDetail(APIView):
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly, IsAuthenticated)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            student = Student.objects.get(id=kwargs['pk'])
+            serializer = StudentInfoImpSerializer(student)
+            return Response(serializer.data)
+
+        except:
+            return Response(data="Student not found",status=status.HTTP_404_NOT_FOUND)
+
+
+class StudentCustomized(APIView):
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly, IsAuthenticated)
+
+    def get(self, request, *args, **kwargs):
         student = Student(name="Samia Ribeiro", age=35, discount=False)
-    except Student.DoesNotExist:
-        return HttpResponse(status=404)
-
-    if request.method == 'GET':
-        serializer = StudentSerializer(student)
-        return JsonResponse(serializer.data)
+        serializer = StudentInfoImpSerializer(student)
+        return Response(serializer.data)

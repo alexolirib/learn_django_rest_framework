@@ -28,7 +28,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'student.apps.StudentConfig'
+    # 'student.apps.StudentConfig'
+    'student',
+    'car'
 ]
 
 MIDDLEWARE = [
@@ -69,12 +71,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }, 'oracle_local_db':{
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'localhost:1521/xe',
+        'USER': 'alexandre',
+        'PASSWORD': '123'
     }
 }
-
-
-# Password validation
-# https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
+DATABASE_ROUTERS = ['learn_django_rest_framework.database_routers.primary_replica_router.PrimaryReplicaRouter']
 
 AUTH_PASSWORD_VALIDATORS = [
     {

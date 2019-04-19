@@ -11,9 +11,10 @@ class Student(models.Model):
 
 
     #authenticated
-    owner = models.ForeignKey('auth.User', related_name='students', on_delete=models.CASCADE)
-    highlighted = models.TextField()
+    #owner = models.ForeignKey('auth.User', related_name='students', on_delete=models.CASCADE)
+    #highlighted = models.TextField()
 
 
     class Meta:
         ordering = ('name',)
+        app_label='student'
